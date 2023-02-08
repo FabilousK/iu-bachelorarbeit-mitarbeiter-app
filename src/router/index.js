@@ -1,11 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import ScanView from '../views/ScanView.vue';
+import HistorieView from '../views/HistorieView.vue';
+import BedienungshilfeView from '../views/BedienungshilfeView.vue';
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView,
+    name: 'Scan',
+    component: ScanView,
+  },
+  {
+    path: '/Historie',
+    name: 'Historie',
+    component: HistorieView,
+  },
+  {
+    path: '/Hilfe',
+    name: 'Bedienungshilfe',
+    component: BedienungshilfeView,
   },
 ];
 
