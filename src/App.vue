@@ -10,7 +10,7 @@
       <v-row align="center">
         <v-col cols="3" align="center">
           <v-avatar color="surface-variant" size="small">
-            <span class="text-subtitle-1">CJ</span>
+            MM
           </v-avatar>
         </v-col>
         <v-col>
@@ -28,6 +28,22 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
+    <v-snackbar
+      v-model="$store.state.alert.snackbarShow"
+      multi-line
+    >
+      {{ $store.state.alert.snackbarText }}
+
+      <template v-slot:actions>
+        <v-btn
+          color="red"
+          variant="text"
+          @click="$store.commit('hideAlert');"
+        >
+          X
+        </v-btn>
+      </template>
+    </v-snackbar>
     <v-main
       :style="mainwrapperStyle">
       <router-view/>
@@ -44,6 +60,7 @@
       'justify-space-around': $vuetify.display.mdAndDown && !$vuetify.display.smAndDown,
       'justify-space-between': $vuetify.display.smAndDown,
       'align-center': true,
+      'px-0': !isDesktop,
     }">
       <!-- Quickmenu -->
         <v-btn
@@ -88,7 +105,8 @@ export default {
     drawerMainmenu: false,
     mainwrapperStyle: {
       maxHeight: 'calc(100vh - 65px)',
-      overflow: 'auto',
+      overflowY: 'auto',
+      overflowX: 'hidden',
     },
     toolbarStyle: {
       position: 'fixed',
