@@ -29,16 +29,16 @@
       </v-list>
     </v-navigation-drawer>
     <v-snackbar
-      v-model="$store.state.alert.snackbarShow"
+      v-model="$store.state.main.alert.snackbarShow"
       multi-line
     >
-      {{ $store.state.alert.snackbarText }}
+      {{ $store.state.main.alert.snackbarText }}
 
       <template v-slot:actions>
         <v-btn
           color="red"
           variant="text"
-          @click="$store.commit('hideAlert');"
+          @click="$store.commit('main/hideAlert');"
         >
           X
         </v-btn>
@@ -151,6 +151,9 @@ export default {
   },
   created() {
     this.checkMediaQueries();
+    if (localStorage.getItem('history')) {
+      this.$store.commit('getHilfestellung/setHistory', JSON.parse(localStorage.getItem('history')));
+    }
   },
 };
 </script>

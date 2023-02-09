@@ -7,38 +7,63 @@
       >
         <div v-if="dialogScan">
           <qrcode-stream
-            @decode="onDecode"
+            @decode="pruefeCode"
+            :style="{
+              'opacity': $store.state.getHilfestellung.loading ? '0.5' : '1',
+            }"
           />
-          <v-text-field
-            v-model="manualCode"
-            label="Manuelle Eingabe"
-          />
+          <v-progress-linear
+            v-if="$store.state.getHilfestellung.loading"
+            indeterminate
+            color="primary"
+          ></v-progress-linear>
+          <v-row no-gutters>
+            <v-col class="d-flex flex-row">
+              <v-text-field
+                v-model="manualCode"
+                label="Manuelle Eingabe"
+                placeholder="XXXX-XXXX-XXXX"
+                @keyup.enter="pruefeCode(`${$store.state.main.urlApi}?h=${manualCode}`);"
+                :disabled="$store.state.getHilfestellung.loading"
+                :rules="[
+                  $store.state.main.inputValidationRules.hilfestellungCode,
+                ]"
+              />
+              <v-btn variant="tonal" class="ma-0 pt-6 pb-8"
+                color="grey"
+                @click="pruefeCode(`${$store.state.main.urlApi}?h=${manualCode}`);"
+                :loading="$store.state.getHilfestellung.loading"
+              >OK</v-btn>
+            </v-col>
+          </v-row>
         </div>
       </v-container>
     </v-col>
     <v-col v-if="query.h">
-      <v-container>
-        {{ query }}
-      </v-container>
+      <v-progress-linear
+        v-if="$store.state.getHilfestellung.loading"
+        indeterminate
+        color="primary"
+      ></v-progress-linear>
+      <showEintrag :eintrag="showEintrag" />
     </v-col>
   </v-row>
 </template>
 
 <script>
 import { QrcodeStream } from 'vue3-qrcode-reader';
+import showEintrag from '@/components/showEintrag.vue';
 
 export default {
   name: 'ScanQR',
   components: {
     QrcodeStream,
+    showEintrag,
   },
   data: () => ({
     dialogScan: true,
-    url: 'https://iu-bachelorarbeit.fkaltenbach.de/?h=',
-    errors: {
-      qrcodeUngueltig: false,
-    },
-    manualCode: '',
+    manualCode: '1234-1234-1234',
+    showEintrag: {},
   }),
   computed: {
     query() {
@@ -46,22 +71,51 @@ export default {
     },
   },
   methods: {
-    onDecode(code) {
-      if (code !== '') {
-        if (code.includes(this.url)) {
+    pruefeCode(qrcode) {
+      if (qrcode !== '' && !this.$store.state.getHilfestellung.loading) {
+        if (qrcode.includes(`${this.$store.state.main.urlApi}?h=`)) {
           // Gültiger Code
-          console.log(code);
-          this.errors.qrcodeUngueltig = false;
-          const id = code.split(this.url).join('');
-          this.$router.push(`/?h=${id}`);
+          const code = qrcode.split(`${this.$store.state.main.urlApi}?h=`).join('');
+          this.manualCode = code;
+          this.ladeHilfestellung(code);
         } else {
           // Ungültiger Code
-          this.$store.commit('showAlert', { text: 'Der gescannte QR-Code ist ungültig.' });
+          this.$store.commit('main/showAlert', { text: 'Der Code ist ungültig.' });
         }
       }
     },
+    ladeHilfestellung(code) {
+      // Lade aus dem lokale Speicher
+      let local = false;
+      if (localStorage.getItem(`h-${code}`)) {
+        this.$router.push(`/?h=${code}`);
+        this.showEintrag = JSON.parse(localStorage.getItem(`h-${code}`));
+        local = true;
+      }
+      // Lade aus dem Backend
+      this.$store.dispatch('getHilfestellung/tryGetHilfestellung', { code, router: this.$router })
+        .then(() => {
+          const res = this.$store.state.getHilfestellung.lastFetch;
+          if (res.status !== 'success') {
+            this.$store.commit('main/showAlert', {
+              text: `Zu dem Code "${code}" konnte kein Eintrag gefunden werden.`,
+            });
+          } else {
+            if (!local) {
+              // Wenn noch lokal geladen wurde, leite weiter
+              this.$router.push(`/?h=${code}`);
+            }
+            // Speichere die Daten
+            localStorage.setItem(`h-${code}`, JSON.stringify(res.eintrag));
+            this.showEintrag = res.eintrag;
+          }
+        });
+    },
   },
   created() {
+    if (this.query.h) {
+      this.ladeHilfestellung(this.query.h);
+    }
   },
 };
 </script>
