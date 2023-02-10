@@ -50,6 +50,11 @@
       <v-divider v-if="$store.state.login.user.id > 0" class="my-4" />
       <v-list>
         <v-list-item
+          v-if="$vuetify.display.lgAndUp && $store.state.login.user.idRole === 2"
+          to="/?h=0" prepend-icon="mdi-plus-box">
+          Neuer Eintrag
+        </v-list-item>
+        <v-list-item
           v-if="!$vuetify.display.mdAndUp && $store.state.login.user.id > 0"
           to="/Raumplan" prepend-icon="mdi-floor-plan">
           Raumplan

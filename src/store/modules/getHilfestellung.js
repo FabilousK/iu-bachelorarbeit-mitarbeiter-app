@@ -2,8 +2,21 @@ export default {
   namespaced: true,
   state: {
     loading: false,
+    loadingSave: false,
     lastFetch: null,
     history: [],
+    emptyTemplate: {
+      id: 0,
+      code: '0',
+      assets: [],
+      title: 'Neuer Eintrag',
+      html: '',
+      html_short: '',
+      created_de: '',
+      lastEdit_de: '',
+      offline: 1,
+      fetched_de: '',
+    },
   },
   getters: {
   },
@@ -20,7 +33,25 @@ export default {
     },
   },
   actions: {
+    async trySaveHilfestellung({ rootState, state }, { eintrag }) {
+      state.lastFetch = null;
+      state.loadingSave = true;
+      const body = new FormData();
+      body.append('token', rootState.login.user.token);
+      body.append('eintrag', JSON.stringify(eintrag));
+      await fetch(`${rootState.main.urlApi}api/?save`, { method: 'post', body })
+        .then((response) => response.json())
+        .then((res) => {
+          state.lastFetch = res;
+          state.loadingSave = false;
+        })
+        .catch((error) => {
+          console.error(error);
+          state.loadingSave = false;
+        });
+    },
     async tryGetHilfestellung({ commit, state, rootState }, { code }) {
+      state.lastFetch = null;
       state.loading = true;
       const body = new FormData();
       body.append('code', code);

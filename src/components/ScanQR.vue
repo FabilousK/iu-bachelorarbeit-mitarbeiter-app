@@ -106,7 +106,7 @@ export default {
       this.$store.dispatch('getHilfestellung/tryGetHilfestellung', { code, router: this.$router })
         .then(() => {
           const res = this.$store.state.getHilfestellung.lastFetch;
-          if (res?.status !== 'success') {
+          if (res?.status !== 'success' && code !== '0') {
             if (!res) {
               if (local) {
                 this.$store.commit('getHilfestellung/addToHistory', code);
@@ -128,15 +128,25 @@ export default {
               this.$store.commit('main/showAlert', {
                 text: `Zu dem Code "${code}" konnte kein Eintrag gefunden werden.`,
               });
+              if (this.query.back) {
+                back = this.query.back;
+              }
+              this.$router.push(`/${back}`);
             }
           } else {
+            let { eintrag } = res;
+            if (code === '0') {
+              eintrag = JSON.parse(JSON.stringify(
+                this.$store.state.getHilfestellung.emptyTemplate,
+              ));
+            }
             if (!local) {
               // Wenn noch lokal geladen wurde, leite weiter
               this.$router.push(`/?h=${code}`);
             }
             // Speichere die Daten
-            localStorage.setItem(`h-${code}`, JSON.stringify(res.eintrag));
-            this.showEintrag = res.eintrag;
+            localStorage.setItem(`h-${code}`, JSON.stringify(eintrag));
+            this.showEintrag = eintrag;
           }
         });
     },
