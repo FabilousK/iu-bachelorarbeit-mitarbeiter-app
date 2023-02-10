@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import ScanView from '../views/ScanView.vue';
 import HistorieView from '../views/HistorieView.vue';
+import RaumplanView from '../views/RaumplanView.vue';
 import BedienungshilfeView from '../views/BedienungshilfeView.vue';
 
 const routes = [
@@ -13,6 +14,11 @@ const routes = [
     path: '/Historie',
     name: 'Historie',
     component: HistorieView,
+  },
+  {
+    path: '/Raumplan',
+    name: 'Raumplan',
+    component: RaumplanView,
   },
   {
     path: '/Hilfe',

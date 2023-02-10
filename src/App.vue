@@ -1,5 +1,34 @@
 <template>
   <v-app>
+    <v-dialog
+      v-model="dialogLogin"
+      width="500px"
+    >
+      <v-card>
+        <v-card-title>Login</v-card-title>
+        <v-card-text>
+          <v-text-field
+            label="Benutzername"
+            v-model="loginUsername"
+          />
+          <v-text-field
+            label="Passwort"
+            type="password"
+            v-model="loginPassword"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn size="small" @click="dialogLogin = false;">abbrechen</v-btn>
+          <v-spacer />
+          <v-btn
+            size="small"
+            color="primary"
+            @click="login();"
+            :loading="$store.state.login.loading.login"
+          >anmelden</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-navigation-drawer
       v-model="drawerMainmenu"
       location="left"
@@ -7,7 +36,7 @@
       color="background"
       temporary
     >
-      <v-row align="center">
+      <v-row align="center" v-if="$store.state.login.user.id > 0">
         <v-col cols="3" align="center">
           <v-avatar color="surface-variant" size="small">
             MM
@@ -18,12 +47,28 @@
           <p class="text-subtitle-2">Max Mustermann</p>
         </v-col>
       </v-row>
-      <v-divider class="my-4" />
+      <v-divider v-if="$store.state.login.user.id > 0" class="my-4" />
       <v-list>
+        <v-list-item
+          v-if="!$vuetify.display.mdAndUp && $store.state.login.user.id > 0"
+          to="/Raumplan" prepend-icon="mdi-floor-plan">
+          Raumplan
+        </v-list-item>
         <v-list-item to="/Hilfe" prepend-icon="mdi-help-circle">
           Bedienungshilfe
         </v-list-item>
-        <v-list-item @click="logout()" prepend-icon="mdi-logout-variant">
+        <v-list-item
+          v-if="$store.state.login.user.id <= 0"
+          @click="dialogLogin = true; drawerMainmenu = false;"
+          prepend-icon="mdi-login-variant"
+        >
+          Einloggen
+        </v-list-item>
+        <v-list-item
+          v-if="$store.state.login.user.id > 0"
+          @click="logout()"
+          prepend-icon="mdi-logout-variant"
+        >
           Ausloggen
         </v-list-item>
       </v-list>
@@ -63,7 +108,8 @@
       'px-0': !isDesktop,
     }">
       <!-- Quickmenu -->
-        <v-btn
+      <v-btn
+          v-if="!$vuetify.display.lgAndUp"
           prepend-icon="mdi-menu"
           @click="drawerMainmenu = true;"
           :size="isDesktop ? 'large' : 'small'"
@@ -72,6 +118,19 @@
         >
           Menü
         </v-btn>
+        <v-btn
+        v-if="$vuetify.display.lgAndUp"
+          icon="mdi-menu"
+          @click="drawerMainmenu = true;"
+          :size="isDesktop ? 'large' : 'small'"
+          :stacked="!isDesktop"
+          :class="{ 'flex-grow-1': !isDesktop, 'me-4': isDesktop}"
+        />
+        <v-divider
+          v-if="$vuetify.display.lgAndUp"
+          class="mx-4 me-8"
+          vertical
+        ></v-divider>
         <v-btn
           prepend-icon="mdi-scan-helper"
           to="/"
@@ -90,6 +149,16 @@
         >
           Historie
         </v-btn>
+        <v-btn
+          v-if="$vuetify.display.mdAndUp && $store.state.login.user.id > 0"
+          prepend-icon="mdi-floor-plan"
+          to="/Raumplan"
+          :size="isDesktop ? 'large' : 'small'"
+          :stacked="!isDesktop"
+          :class="{ 'flex-grow-1': !isDesktop, 'mx-4': isDesktop }"
+        >
+          Raumplan
+        </v-btn>
       <!-- Quickmenu -->
     </v-container>
     </v-toolbar>
@@ -102,6 +171,7 @@ export default {
   name: 'App',
 
   data: () => ({
+    dialogLogin: false,
     drawerMainmenu: false,
     mainwrapperStyle: {
       maxHeight: 'calc(100vh - 65px)',
@@ -114,6 +184,8 @@ export default {
       left: '0px',
       width: '100%',
     },
+    loginUsername: '',
+    loginPassword: '',
   }),
   computed: {
     vuetifyBreakpoints() {
@@ -145,8 +217,24 @@ export default {
         this.toolbarStyle.bottom = '0px';
       }
     },
+    login() {
+      this.$store.dispatch('login/tryLogin', {
+        username: this.loginUsername,
+        password: this.loginPassword,
+      }).then(() => {
+        if (this.$store.state.login.user.id > 0) {
+          this.loginUsername = '';
+          this.loginPassword = '';
+          this.dialogLogin = false;
+        } else {
+          this.$store.commit('main/showAlert', {
+            text: 'Die Zugangsdaten sind inkorrekt',
+          });
+        }
+      });
+    },
     logout() {
-      //
+      this.$store.dispatch('login/logout');
     },
   },
   created() {
@@ -154,6 +242,8 @@ export default {
     if (localStorage.getItem('history')) {
       this.$store.commit('getHilfestellung/setHistory', JSON.parse(localStorage.getItem('history')));
     }
+    // Alle lokal erzwungenen Hilfestellungen laden:
+    this.$store.dispatch('getHilfestellung/tryGetLokaleHilfestellungen');
   },
 };
 </script>
