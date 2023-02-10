@@ -15,16 +15,31 @@ export default {
   mutations: {
   },
   actions: {
-    async tryLogin({ rootState, state }, { username, password }) {
+    async tryLogin({ rootState, state }, { username, password, token }) {
       state.loading.login = true;
       const body = new FormData();
       body.append('nn', username);
       body.append('pw', password);
+      body.append('token', token);
       await fetch(`${rootState.main.urlApi}api/login/`, { method: 'post', body })
         .then((response) => response.json())
         .then((res) => {
           state.loading.login = false;
-          state.user = res.user;
+          if (res.status !== 'success') {
+            if (token !== '') {
+              this.commit('main/showAlert', {
+                text: 'Die Sitzung ist abgelaufen. Sie wurden automatisch ausgeloggt.',
+              });
+            } else {
+              this.commit('main/showAlert', {
+                text: 'Logindaten ungültig',
+              });
+            }
+            this.dispatch('login/logout');
+          } else {
+            state.user = res.user;
+            localStorage.setItem('login', JSON.stringify(res.user));
+          }
         })
         .catch((error) => {
           console.error(error);

@@ -23,7 +23,7 @@
           <v-btn
             size="small"
             color="primary"
-            @click="login();"
+            @click="login('');"
             :loading="$store.state.login.loading.login"
           >anmelden</v-btn>
         </v-card-actions>
@@ -39,12 +39,12 @@
       <v-row align="center" v-if="$store.state.login.user.id > 0">
         <v-col cols="3" align="center">
           <v-avatar color="surface-variant" size="small">
-            MM
+            {{ $store.state.login.user.initialien }}
           </v-avatar>
         </v-col>
         <v-col>
           <p class="text-subtitle-1">Mitarbeiter-App</p>
-          <p class="text-subtitle-2">Max Mustermann</p>
+          <p class="text-subtitle-2">{{ $store.state.login.user.name }}</p>
         </v-col>
       </v-row>
       <v-divider v-if="$store.state.login.user.id > 0" class="my-4" />
@@ -217,19 +217,16 @@ export default {
         this.toolbarStyle.bottom = '0px';
       }
     },
-    login() {
+    login(token) {
       this.$store.dispatch('login/tryLogin', {
         username: this.loginUsername,
         password: this.loginPassword,
+        token,
       }).then(() => {
         if (this.$store.state.login.user.id > 0) {
           this.loginUsername = '';
           this.loginPassword = '';
           this.dialogLogin = false;
-        } else {
-          this.$store.commit('main/showAlert', {
-            text: 'Die Zugangsdaten sind inkorrekt',
-          });
         }
       });
     },
@@ -244,6 +241,11 @@ export default {
     }
     // Alle lokal erzwungenen Hilfestellungen laden:
     this.$store.dispatch('getHilfestellung/tryGetLokaleHilfestellungen');
+    // Wenn Loginsitzung vorhanden, lade Nutzerdaten
+    if (localStorage.getItem('login')) {
+      const userdata = JSON.parse(localStorage.getItem('login'));
+      this.login(userdata.token);
+    }
   },
 };
 </script>
