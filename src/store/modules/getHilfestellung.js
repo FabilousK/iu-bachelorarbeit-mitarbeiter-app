@@ -22,7 +22,6 @@ export default {
   },
   mutations: {
     setHistory(state, value) {
-      console.log(value);
       state.history = value;
       localStorage.setItem('history', JSON.stringify(state.history));
     },

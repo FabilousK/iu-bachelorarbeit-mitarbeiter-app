@@ -15,6 +15,7 @@
             label="Passwort"
             type="password"
             v-model="loginPassword"
+            @keyup.enter="login('');"
           />
         </v-card-text>
         <v-card-actions>

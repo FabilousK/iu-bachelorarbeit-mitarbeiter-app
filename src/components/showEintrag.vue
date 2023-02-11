@@ -101,13 +101,64 @@
               || eintrag.html_short === ''
             "
             class="text-body-2"
-            v-html="eintrag.html"
-          ></div>
+          >
+            <span
+              v-for="(cont, idx) in insertAssetsToHTML(eintrag.html)"
+              :key="idx"
+            >
+            <span
+              v-if="cont.type === 'span'"
+              v-html="cont.html"
+            ></span>
+            <v-img
+              :src="cont.html"
+              v-else-if="cont.type === 'img'"
+              style="max-height:70vh;"
+            >
+              <template v-slot:placeholder>
+                <v-row
+                  class="fill-height ma-0"
+                  align="center"
+                  justify="center"
+                >
+                  <v-progress-circular
+                    indeterminate
+                    color="grey lighten-5"
+                  ></v-progress-circular>
+                </v-row>
+              </template>
+            </v-img>
+            <div align="center" v-else-if="cont.type === 'mp4'">
+              <v-expansion-panels class="mt-2">
+              <v-expansion-panel
+                style="background:transparent;"
+              >
+                <v-expansion-panel-title>
+                  <b class="me-1">Video:</b> {{ ` ${cont.name}` }}
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                  <video
+                    width="400" controls
+                  >
+                    <track kind="captions" />
+                    <source :src="cont.html" type="video/mp4">
+                    Das Video kann nicht angezeigt werden.
+                    Bitte verwenden Sie einen aktuellen Internetbrower.
+                  </video>
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
+            </div>
+            <span
+              v-else
+              v-html="cont.html"
+            ></span>
+            </span>
+          </div>
           <div
             v-else
             class="text-body-2"
-            v-html="eintrag.html_short"
-          ></div>
+          >{{ insertAssetsToHTML(eintrag.html_short) }}</div>
         </div>
         <div class="pa-0" v-else>
           <v-textarea
@@ -143,7 +194,66 @@
             <tr v-if="edit">
               <td>Assets:</td>
               <td>
-                {{ eintrag.assets }}
+                <div>
+                  <v-chip
+                    v-for="asset in eintrag.assets"
+                    :key="asset.id"
+                    class="ma-1 pa-5"
+                  >
+                    {{ asset.name }}.{{ asset.type }}
+                    <v-btn
+                      size="x-small" icon="mdi-content-copy" class="ms-4"
+                      @click="copyToClipboard(`[[Asset:${asset.id}]]`);"
+                      title="In die Zwischenablage"
+                    ></v-btn>
+                    <v-btn
+                      size="x-small" icon="mdi-pencil" class="ms-2"
+                      @click="dialogsEditAsset[asset.id] = true;"
+                      title="Asset bearbeiten"
+                    ></v-btn>
+                  </v-chip>
+                  <v-dialog
+                    v-for="asset in eintrag.assets"
+                    :key="asset.id"
+                    v-model="dialogsEditAsset[asset.id]"
+                    width="500px"
+                  >
+                    <v-card>
+                      <v-card-title>
+                        <v-btn
+                          icon="mdi-delete" size="x-small" class="me-2"
+                          @click="delAsset(asset.id)"
+                        />
+                        {{ asset.name }}
+                      </v-card-title>
+                      <v-card-text>
+                        <v-text-field label="Name" v-model="asset.name"/>
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-spacer />
+                        <v-btn @click="dialogsEditAsset[asset.id] = false;">ok</v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </v-dialog>
+                </div>
+                <v-row align="center" v-if="eintrag.id > 0">
+                  <v-col>
+                    <v-file-input
+                      multiple
+                      label="Datei/en anhängen"
+                      class="mt-5"
+                      v-model="neuAssets"
+                      accept=".jpg,.jpeg,.png,.pdf,.mp4"
+                    ></v-file-input>
+                  </v-col>
+                  <v-col cols="2" align="center" v-if="neuAssets.length > 0">
+                    <v-btn
+                      size="small"
+                      @click="addAssets();"
+                      :loading="loadingAddAssets"
+                    >Hochladen</v-btn>
+                  </v-col>
+                </v-row>
               </td>
             </tr>
             <tr v-if="edit">
@@ -159,7 +269,13 @@
             </tr>
             <tr v-if="eintrag.code !== '0'">
               <td>Code:</td>
-              <td>{{ eintrag.code }}</td>
+              <td>
+                <v-btn
+                  size="small"
+                  prepend-icon="mdi-download"
+                  class="me-2"
+                >{{ eintrag.code }}</v-btn>
+              </td>
             </tr>
             <tr v-if="eintrag.lastEdit_de !== ''">
               <td>Letzte Änderung:</td>
@@ -192,8 +308,10 @@ export default {
   },
   data: () => ({
     dialogCancelEdit: false,
+    dialogsEditAsset: {},
     tabsEintragMetadaten: null,
     tabsHtmlVariant: null,
+    loadingAddAssets: false,
     edit: false,
     eintrag: {},
     eintragSnapshot: '',
@@ -202,6 +320,7 @@ export default {
       { title: 'Nach Abruf Offline verfügbar', value: 1 },
       { title: 'Immer Offline verfügbar', value: 2 },
     ],
+    neuAssets: [],
   }),
   computed: {
     query() {
@@ -259,6 +378,86 @@ export default {
     },
   },
   methods: {
+    insertAssetsToHTML(altHtml) {
+      const htmlR = altHtml.split('[[');
+      const content = [];
+      htmlR.forEach((t) => {
+        const t2 = t.split(']]');
+        t2.forEach((t3) => {
+          content.push({
+            type: 'span',
+            html: t3,
+          });
+        });
+      });
+      content.forEach((t, idx) => {
+        if (idx % 2) {
+          const tR = t.html.split(':');
+          if (tR[0] === 'Asset' && tR.length > 0) {
+            const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR[1], 10));
+            if (asset.length > 0) {
+              content[idx].type = asset[0].type;
+              let neuHtml = '';
+              console.log(asset[0].type);
+              if (['jpg', 'jpeg', 'png'].includes(asset[0].type)) {
+                // Bild- oder Videodatei
+                content[idx].type = 'img';
+                neuHtml = `${this.$store.state.main.urlApi}api/data/`;
+                neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
+                content[idx].name = asset[0].name;
+                content[idx].html = neuHtml;
+              } else if (['mp4'].includes(asset[0].type)) {
+                neuHtml = `${this.$store.state.main.urlApi}api/data/`;
+                neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
+                content[idx].name = asset[0].name;
+                content[idx].html = neuHtml;
+              } else {
+                // Verlinkung
+                neuHtml = `<a target="_blank" href="${this.$store.state.main.urlApi}api/data/`;
+                neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}">`;
+                neuHtml += `${asset[0].name}.${asset[0].type}</a>`;
+                content[idx].html = neuHtml;
+              }
+            }
+          }
+        }
+      });
+      return content;
+    },
+    async addAssets() {
+      console.log(this.neuAssets);
+      this.loadingAddAssets = true;
+      const body = new FormData();
+      let i = 1;
+      this.neuAssets.forEach((a) => {
+        body.append(`upload-${i}`, a);
+        i += 1;
+      });
+      body.append('idHilfestellung', this.eintrag.id);
+      body.append('token', this.$store.state.login.user.token);
+      await fetch(`${this.$store.state.main.urlApi}api/?addAssets`, { method: 'post', body })
+        .then((response) => response.json())
+        .then((res) => {
+          this.loadingAddAssets = false;
+          if (res.status === 'success') {
+            res.assets.forEach((a) => {
+              this.eintrag.assets.push(a);
+            });
+          }
+        })
+        .catch((error) => {
+          this.loadingAddAssets = false;
+          console.error(error);
+        });
+    },
+    delAsset(id) {
+      this.eintrag.assets.forEach((a, idx) => {
+        if (a.id === id) {
+          this.eintrag.assets.splice(idx, 1);
+          this.dialogsEditAsset[id] = false;
+        }
+      });
+    },
     saveEintrag() {
       this.$store.dispatch('getHilfestellung/trySaveHilfestellung', {
         eintrag: this.eintrag,
@@ -279,6 +478,7 @@ export default {
           }
           localStorage.setItem(`h-${this.eintrag.code}`, JSON.stringify(this.eintrag));
           this.edit = false;
+          window.location.reload();
         }
       });
     },
@@ -295,6 +495,9 @@ export default {
       } else {
         this.dialogCancelEdit = true;
       }
+    },
+    copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
     },
   },
   created() {
