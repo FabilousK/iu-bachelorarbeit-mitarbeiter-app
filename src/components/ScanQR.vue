@@ -148,6 +148,7 @@ export default {
             localStorage.setItem(`h-${code}`, JSON.stringify(eintrag));
             this.showEintrag = eintrag;
           }
+          this.$store.dispatch('login/trySaveHistory');
         });
     },
   },

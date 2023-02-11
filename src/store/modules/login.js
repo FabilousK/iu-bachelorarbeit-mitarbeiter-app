@@ -38,6 +38,10 @@ export default {
             this.dispatch('login/logout');
           } else {
             state.user = res.user;
+            this.commit('getHilfestellung/setHistory', res.user.historie);
+            res.user.historie_lokal.forEach((h) => {
+              localStorage.setItem(`h-${h.code}`, JSON.stringify(h));
+            });
             localStorage.setItem('login', JSON.stringify(res.user));
           }
         })
@@ -54,6 +58,19 @@ export default {
       };
       localStorage.clear();
       this.commit('getHilfestellung/setHistory', []);
+    },
+    async trySaveHistory({ rootState, state }) {
+      const body = new FormData();
+      body.append('historie', JSON.stringify(rootState.getHilfestellung.history));
+      body.append('token', state.user.token);
+      await fetch(`${rootState.main.urlApi}api/login/?saveHistory`, { method: 'post', body })
+        .then((response) => response.json())
+        .then((/* res */) => {
+          //
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     },
   },
   modules: {
