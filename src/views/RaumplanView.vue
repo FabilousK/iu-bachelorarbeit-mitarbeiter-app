@@ -17,7 +17,7 @@
             }`"
             prepend-icon="mdi-information"
           >{{ code.titel }}</v-btn>
-          <v-expansion-panels class="mt-2" v-model="expansionEbene">
+          <v-expansion-panels v-model="expansionEbene">
             <v-expansion-panel
               v-for="ebene in geb.ebenen" :key="ebene.id"
               :value="ebene.id"
@@ -33,8 +33,9 @@
                     encodeURIComponent(`/Raumplan?e=${geb.id}-${ebene.id}-0`)
                   }`"
                   prepend-icon="mdi-information"
+                  style="text-overflow: ellipsis;"
                 >{{ code.titel }}</v-btn>
-                <v-expansion-panels class="mt-2" v-model="expansionRaum">
+                <v-expansion-panels v-model="expansionRaum">
                   <v-expansion-panel
                     v-for="raum in ebene.raeume" :key="raum.id"
                     :value="raum.id"
@@ -45,7 +46,7 @@
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
                       <v-btn
-                        size="small"
+                        size="x-small"
                         v-for="code in raum.codes" :key="code.code"
                         :to="`/?h=${code.code}&back=${
                           encodeURIComponent(`/Raumplan?e=${geb.id}-${ebene.id}-${raum.id}`)
@@ -174,3 +175,6 @@ export default defineComponent({
   },
 });
 </script>
+<style>
+  .v-expansion-panel-text__wrapper {padding:10px;}
+</style>

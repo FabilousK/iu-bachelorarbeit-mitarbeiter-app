@@ -35,7 +35,7 @@
       color="primary-lighten-3"
       density="compact"
       :style="{
-        'transform': $vuetify.display.lgAndUp ? 'translateY(64px)' : '',
+        'transform': $vuetify.display.lgAndUp ? 'translateY(49px)' : '',
       }"
     >
       <template v-slot:prepend>

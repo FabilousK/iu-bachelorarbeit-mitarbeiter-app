@@ -102,6 +102,7 @@
     <v-toolbar
       elevation="4"
       color="primary"
+      density="compact"
       :style="toolbarStyle"
     >
     <v-container fluid :class="{
@@ -118,7 +119,7 @@
           v-if="!$vuetify.display.lgAndUp"
           prepend-icon="mdi-menu"
           @click="drawerMainmenu = true;"
-          :size="isDesktop ? 'large' : 'small'"
+          :size="isDesktop ? 'large' : 'x-small'"
           :stacked="!isDesktop"
           :class="{ 'flex-grow-1': !isDesktop, 'me-4': isDesktop}"
         >
@@ -128,7 +129,7 @@
         v-if="$vuetify.display.lgAndUp"
           icon="mdi-menu"
           @click="drawerMainmenu = true;"
-          :size="isDesktop ? 'large' : 'small'"
+          :size="isDesktop ? 'large' : 'x-small'"
           :stacked="!isDesktop"
           :class="{ 'flex-grow-1': !isDesktop, 'me-4': isDesktop}"
         />
@@ -140,7 +141,7 @@
         <v-btn
           prepend-icon="mdi-scan-helper"
           to="/"
-          :size="isDesktop ? 'large' : 'small'"
+          :size="isDesktop ? 'large' : 'x-small'"
           :stacked="!isDesktop"
           :class="{ 'flex-grow-1': !isDesktop, 'mx-4': isDesktop }"
         >
@@ -149,7 +150,7 @@
         <v-btn
           prepend-icon="mdi-history"
           to="/Historie"
-          :size="isDesktop ? 'large' : 'small'"
+          :size="isDesktop ? 'large' : 'x-small'"
           :stacked="!isDesktop"
           :class="{ 'flex-grow-1': !isDesktop, 'mx-4': isDesktop }"
         >
@@ -159,7 +160,7 @@
           v-if="$vuetify.display.mdAndUp && $store.state.login.user.id > 0"
           prepend-icon="mdi-floor-plan"
           to="/Raumplan"
-          :size="isDesktop ? 'large' : 'small'"
+          :size="isDesktop ? 'large' : 'x-small'"
           :stacked="!isDesktop"
           :class="{ 'flex-grow-1': !isDesktop, 'mx-4': isDesktop }"
         >
@@ -180,7 +181,7 @@ export default {
     dialogLogin: false,
     drawerMainmenu: false,
     mainwrapperStyle: {
-      maxHeight: 'calc(100vh - 65px)',
+      maxHeight: 'calc(100vh - 50px)',
       overflowY: 'auto',
       overflowX: 'hidden',
     },
@@ -213,7 +214,7 @@ export default {
     checkMediaQueries() {
       if (this.isDesktop) {
         // Desktop-PC Auflösung
-        this.mainwrapperStyle.marginTop = '65px';
+        this.mainwrapperStyle.marginTop = '50px';
         delete this.toolbarStyle.bottom;
         this.toolbarStyle.top = '0px';
       } else {

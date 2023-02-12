@@ -7,6 +7,8 @@
       <div
         v-if="cont.type === 'div'"
         v-html="cont.html"
+        class="px-2"
+        align="justify"
       ></div>
       <v-img
         :src="cont.html"
@@ -41,6 +43,7 @@
             <v-expansion-panel-text>
               <video
                 width="400" controls
+                style="max-width:100%;"
               >
                 <track kind="captions" />
                 <source :src="cont.html" type="video/mp4">
