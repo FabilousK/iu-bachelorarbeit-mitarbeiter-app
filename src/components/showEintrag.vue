@@ -102,7 +102,8 @@
             "
             class="text-body-2"
           >
-            <span
+            <showEintragRenderContent :prop_content="insertAssetsToHTML(eintrag.html)" />
+            <!-- <span
               v-for="(cont, idx) in insertAssetsToHTML(eintrag.html)"
               :key="idx"
             >
@@ -113,7 +114,11 @@
             <v-img
               :src="cont.html"
               v-else-if="cont.type === 'img'"
-              style="max-height:70vh;"
+              :width="cont.width"
+              :style="{
+                'max-height': '70vh',
+                'max-width': '100%',
+              }"
             >
               <template v-slot:placeholder>
                 <v-row
@@ -153,12 +158,12 @@
               v-else
               v-html="cont.html"
             ></span>
-            </span>
+            </span> -->
           </div>
           <div
             v-else
             class="text-body-2"
-          >{{ insertAssetsToHTML(eintrag.html_short) }}</div>
+          ><showEintragRenderContent :prop_content="insertAssetsToHTML(eintrag.html_short)" /></div>
         </div>
         <div class="pa-0" v-else>
           <v-textarea
@@ -251,7 +256,8 @@
                       size="small"
                       @click="addAssets();"
                       :loading="loadingAddAssets"
-                    >Hochladen</v-btn>
+                      icon="mdi-upload"
+                    ></v-btn>
                   </v-col>
                 </v-row>
               </td>
@@ -274,6 +280,11 @@
                   size="small"
                   prepend-icon="mdi-download"
                   class="me-2"
+                  @click="$store.dispatch('main/tryDownload', {
+                    path: `data/assets/${eintrag.id}/qr_${eintrag.code}.pdf`,
+                    name: `QR-${eintrag.code}`,
+                    newTab: true,
+                  })"
                 >{{ eintrag.code }}</v-btn>
               </td>
             </tr>
@@ -295,10 +306,12 @@
 </template>
 
 <script>
+import showEintragRenderContent from '@/components/showEintragRenderContent.vue';
 
 export default {
   name: 'showEintrag',
   components: {
+    showEintragRenderContent,
   },
   props: {
     prop_eintrag: {
@@ -328,14 +341,14 @@ export default {
     },
     backUrl() {
       if (this.$router.currentRoute.value.query.back) {
-        return `/${this.$router.currentRoute.value.query.back}`;
+        return `${decodeURIComponent(this.$router.currentRoute.value.query.back)}`;
       }
       return '/';
     },
     allowEdit() {
       if (
-        this.$vuetify.display.lgAndUp
-        && this.$store.state.login.user.idRole === 2
+        /* this.$vuetify.display.lgAndUp
+        && */ this.$store.state.login.user.idRole === 2
       ) {
         return true;
       }
@@ -385,7 +398,7 @@ export default {
         const t2 = t.split(']]');
         t2.forEach((t3) => {
           content.push({
-            type: 'span',
+            type: 'div',
             html: t3,
           });
         });
@@ -398,7 +411,6 @@ export default {
             if (asset.length > 0) {
               content[idx].type = asset[0].type;
               let neuHtml = '';
-              console.log(asset[0].type);
               if (['jpg', 'jpeg', 'png'].includes(asset[0].type)) {
                 // Bild- oder Videodatei
                 content[idx].type = 'img';
@@ -406,6 +418,10 @@ export default {
                 neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
                 content[idx].name = asset[0].name;
                 content[idx].html = neuHtml;
+                content[idx].width = '100%';
+                if (tR[2]) {
+                  [, , content[idx].width] = tR;
+                }
               } else if (['mp4'].includes(asset[0].type)) {
                 neuHtml = `${this.$store.state.main.urlApi}api/data/`;
                 neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
@@ -425,7 +441,6 @@ export default {
       return content;
     },
     async addAssets() {
-      console.log(this.neuAssets);
       this.loadingAddAssets = true;
       const body = new FormData();
       let i = 1;
@@ -478,7 +493,7 @@ export default {
           }
           localStorage.setItem(`h-${this.eintrag.code}`, JSON.stringify(this.eintrag));
           this.edit = false;
-          window.location.reload();
+          // window.location.reload();
         }
       });
     },

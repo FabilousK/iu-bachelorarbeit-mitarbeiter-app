@@ -6,7 +6,7 @@
       <v-card
         v-for="eintrag in history"
         :key="eintrag.code"
-        :to="`/?h=${eintrag.code}&back=Historie`"
+        :to="`/?h=${eintrag.code}&back=${encodeURIComponent('/Historie')}`"
         class="my-2"
       >
         <v-card-title>{{ eintrag.val.title }}</v-card-title>

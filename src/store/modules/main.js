@@ -32,6 +32,39 @@ export default {
     },
   },
   actions: {
+    async tryDownload({ state }, { path, name, newTab }) {
+      // path: z.B. data/assets/1/qr_123.png
+      // name: z.B. QR-Code.png
+      // newTab: z.B. false
+      const body = new FormData();
+      body.append('file', path);
+      await fetch(`${state.urlApi}api/data/download/`, {
+        method: 'POST',
+        body,
+      })
+        .then((response) => response.blob())
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          if (newTab) {
+            a.target = '_blank';
+          } else {
+            a.download = name;
+          }
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        })
+        .catch((error) => {
+          // Wenn bei der Verbindung ein Fehler aufgetreten ist:
+          this.commit('main/showAlert', {
+            text: `Die angeforderte Datei konnte nicht erzeugt werden.
+            Bitte die Netzwerkverbindung prüfen.`,
+          });
+          console.log(error);
+        });
+    },
   },
   modules: {
   },

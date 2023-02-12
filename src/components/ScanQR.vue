@@ -123,7 +123,7 @@ export default {
               if (this.query.back) {
                 back = this.query.back;
               }
-              this.$router.push(`/${back}`);
+              this.$router.push(`${decodeURIComponent(back)}`);
             } else {
               this.$store.commit('main/showAlert', {
                 text: `Zu dem Code "${code}" konnte kein Eintrag gefunden werden.`,
@@ -131,7 +131,7 @@ export default {
               if (this.query.back) {
                 back = this.query.back;
               }
-              this.$router.push(`/${back}`);
+              this.$router.push(`${decodeURIComponent(back)}`);
             }
           } else {
             let { eintrag } = res;
