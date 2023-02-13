@@ -46,12 +46,19 @@ export default {
           }
         })
         .catch((error) => {
-          if (localStorage.getItem('login')) {
-            const login = JSON.parse(localStorage.getItem('login'));
-            state.user = login;
-          }
-          console.error(error);
-          state.loading = false;
+          setTimeout(() => {
+            if (localStorage.getItem('login')) {
+              const login = JSON.parse(localStorage.getItem('login'));
+              state.user = login;
+            } else {
+              this.commit('main/showAlert', {
+                text: `Es konnte keine Verbindung mit dem Server hergestellt werden.
+                Bitte die Internetverbindung prüfen.`,
+              });
+            }
+            console.error(error);
+            state.loading = false;
+          }, 1000);
         });
     },
     logout({ state }) {
