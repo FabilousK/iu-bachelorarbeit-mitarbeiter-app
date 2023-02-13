@@ -55,6 +55,12 @@ export default {
       state.lastFetch = null;
       state.loading = true;
       const body = new FormData();
+      let idLogin = rootState.login.user.id;
+      if (localStorage.getItem('login') && idLogin === 0) {
+        const lokalLogin = JSON.parse(localStorage.getItem('login'));
+        idLogin = lokalLogin.id;
+      }
+      body.append('id_login', idLogin);
       body.append('code', code);
       await fetch(`${rootState.main.urlApi}api/?getFromId`, { method: 'post', body })
         .then((response) => response.json())

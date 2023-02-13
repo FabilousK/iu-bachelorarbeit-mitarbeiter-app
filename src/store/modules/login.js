@@ -46,6 +46,10 @@ export default {
           }
         })
         .catch((error) => {
+          if (localStorage.getItem('login')) {
+            const login = JSON.parse(localStorage.getItem('login'));
+            state.user = login;
+          }
           console.error(error);
           state.loading = false;
         });
