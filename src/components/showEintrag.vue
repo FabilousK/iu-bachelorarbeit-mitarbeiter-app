@@ -159,7 +159,7 @@
                     {{ asset.name }}.{{ asset.type }}
                     <v-btn
                       size="x-small" icon="mdi-content-copy" class="ms-4"
-                      @click="copyToClipboard(`[[Asset:${asset.id}]]`);"
+                      @click="copyToClipboard(`[[Asset::${asset.id}]]`);"
                       title="In die Zwischenablage"
                     ></v-btn>
                     <v-btn
@@ -391,7 +391,8 @@ export default {
       });
       content.forEach((t, idx) => {
         if (idx % 2) {
-          const tR = t.html.split(':');
+          const tR = t.html.split('::');
+          // ASSETS
           if (tR[0] === 'Asset' && tR.length > 0) {
             const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR[1], 10));
             if (asset.length > 0) {
@@ -414,13 +415,27 @@ export default {
                 content[idx].name = asset[0].name;
                 content[idx].html = neuHtml;
               } else {
-                // Verlinkung
+                // Verlinkung zur Datei
                 neuHtml = `<a target="_blank" href="${this.$store.state.main.urlApi}api/data/`;
                 neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}">`;
                 neuHtml += `${asset[0].name}.${asset[0].type}</a>`;
                 content[idx].html = neuHtml;
               }
             }
+          }
+          // ABSCHNITSMENÜ
+          if (tR[0] === 'Menü' && tR.length > 0) {
+            content[idx].type = 'menü';
+            const werte = [];
+            tR.forEach((tR2, idx2) => {
+              if (idx2 >= 3) {
+                const neuWert = tR2.split('|');
+                werte.push({ title: neuWert[1], value: neuWert[0] });
+              }
+            });
+            content[idx].werte = werte;
+            [, content[idx].id] = tR;
+            [, , content[idx].html] = tR;
           }
         }
       });

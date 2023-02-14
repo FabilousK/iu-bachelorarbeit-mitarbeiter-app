@@ -4,15 +4,37 @@
       v-for="(cont, idx) in prop_content"
       :key="idx"
     >
+      <!-- DIV -->
       <div
         v-if="cont.type === 'div'"
         v-html="cont.html"
         class="px-2"
         align="justify"
       ></div>
+      <!-- ABSCHNITTSMENÜ -->
+      <div
+        v-if="cont.type === 'menü'"
+        class="px-2"
+        align="justify"
+      >
+        <p class="pa-4">{{ cont.html }}</p>
+        <v-tabs
+          density="compact"
+          v-model="menueAuswahlWerte[cont.id]"
+        >
+          <v-tab
+            v-for="wert in cont.werte"
+            :key="wert.value"
+            :value="wert.value"
+          >
+            {{ wert.title }}
+          </v-tab>
+        </v-tabs>
+      </div>
+      <!-- IMG -->
       <v-img
         :src="cont.html"
-        v-else-if="cont.type === 'img'"
+        v-if="cont.type === 'img'"
         :width="cont.width"
         :style="{
           'max-height': '70vh',
@@ -32,7 +54,8 @@
           </v-row>
         </template>
       </v-img>
-      <div align="center" v-else-if="cont.type === 'mp4'">
+      <!-- VIDEO -->
+      <div align="center" v-if="cont.type === 'mp4'">
         <v-expansion-panels class="mt-2">
           <v-expansion-panel
             style="background:transparent;"
@@ -54,10 +77,6 @@
           </v-expansion-panel>
         </v-expansion-panels>
       </div>
-      <div
-        v-else
-        v-html="cont.html"
-      ></div>
     </div>
   </div>
 </template>
@@ -75,6 +94,7 @@ export default {
     },
   },
   data: () => ({
+    menueAuswahlWerte: {},
   }),
   computed: {
   },
