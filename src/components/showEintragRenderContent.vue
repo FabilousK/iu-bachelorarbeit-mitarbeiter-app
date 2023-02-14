@@ -1,7 +1,19 @@
 <template>
-  <div>
     <div
-      v-for="(cont, idx) in prop_content"
+      v-for="(cont, idx) in prop_content.filter((o) => {
+        if (
+          o.type !== ''
+          && o.html.split('\n<br />').join('') !== ''
+          && o.html.split('<br />\n').join('') !== ''
+          && (
+            o.inAbschnitt.menu < 0
+            || menueAuswahlWerte[o.inAbschnitt.menu] === o.inAbschnitt.value
+          )
+        ) {
+          return o;
+        }
+        return null;
+      })"
       :key="idx"
     >
       <!-- DIV -->
@@ -14,12 +26,12 @@
       <!-- ABSCHNITTSMENÜ -->
       <div
         v-if="cont.type === 'menü'"
-        class="px-2"
+        class="px-2 mb-4"
         align="justify"
       >
-        <p class="pa-4">{{ cont.html }}</p>
+        <p class="pa-4"><b>{{ cont.html }}</b></p>
         <v-tabs
-          density="compact"
+          density="compact" center-active
           v-model="menueAuswahlWerte[cont.id]"
         >
           <v-tab
@@ -78,7 +90,6 @@
         </v-expansion-panels>
       </div>
     </div>
-  </div>
 </template>
 
 <script>

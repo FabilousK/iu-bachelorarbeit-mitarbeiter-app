@@ -386,58 +386,66 @@ export default {
           content.push({
             type: 'div',
             html: t3,
+            inAbschnitt: { menu: -1, value: -1 },
           });
         });
       });
+      let inAbschnitt = { menu: -1, value: -1 };
       content.forEach((t, idx) => {
         if (idx % 2) {
           const tR = t.html.split('::');
-          // ASSETS
-          if (tR[0] === 'Asset' && tR.length > 0) {
-            const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR[1], 10));
-            if (asset.length > 0) {
-              content[idx].type = asset[0].type;
-              let neuHtml = '';
-              if (['jpg', 'jpeg', 'png'].includes(asset[0].type)) {
-                // Bild- oder Videodatei
-                content[idx].type = 'img';
-                neuHtml = `${this.$store.state.main.urlApi}api/data/`;
-                neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
-                content[idx].name = asset[0].name;
-                content[idx].html = neuHtml;
-                content[idx].width = '100%';
-                if (tR[2]) {
-                  [, , content[idx].width] = tR;
+          if (tR.length > 0) {
+            if (tR[0] === 'Asset' && tR.length > 0) {
+              const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR[1], 10));
+              if (asset.length > 0) {
+                content[idx].type = asset[0].type;
+                let neuHtml = '';
+                if (['jpg', 'jpeg', 'png'].includes(asset[0].type)) {
+                  // Bild- oder Videodatei
+                  content[idx].type = 'img';
+                  neuHtml = `${this.$store.state.main.urlApi}api/data/`;
+                  neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
+                  content[idx].name = asset[0].name;
+                  content[idx].html = neuHtml;
+                  content[idx].width = '100%';
+                  if (tR[2]) {
+                    [, , content[idx].width] = tR;
+                  }
+                } else if (['mp4'].includes(asset[0].type)) {
+                  neuHtml = `${this.$store.state.main.urlApi}api/data/`;
+                  neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
+                  content[idx].name = asset[0].name;
+                  content[idx].html = neuHtml;
+                } else {
+                  // Verlinkung zur Datei
+                  neuHtml = `<a target="_blank" href="${this.$store.state.main.urlApi}api/data/`;
+                  neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}">`;
+                  neuHtml += `${asset[0].name}.${asset[0].type}</a>`;
+                  content[idx].html = neuHtml;
                 }
-              } else if (['mp4'].includes(asset[0].type)) {
-                neuHtml = `${this.$store.state.main.urlApi}api/data/`;
-                neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
-                content[idx].name = asset[0].name;
-                content[idx].html = neuHtml;
-              } else {
-                // Verlinkung zur Datei
-                neuHtml = `<a target="_blank" href="${this.$store.state.main.urlApi}api/data/`;
-                neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}">`;
-                neuHtml += `${asset[0].name}.${asset[0].type}</a>`;
-                content[idx].html = neuHtml;
               }
+            } else if (tR[0] === 'Menü' && tR.length > 0) {
+              content[idx].type = 'menü';
+              const werte = [];
+              tR.forEach((tR2, idx2) => {
+                if (idx2 >= 3) {
+                  const neuWert = tR2.split('|');
+                  werte.push({ title: neuWert[1], value: neuWert[0] });
+                }
+              });
+              content[idx].werte = werte;
+              [, content[idx].id] = tR;
+              [, , content[idx].html] = tR;
+            } else if (tR[0] === 'Beginn' && tR.length > 0) {
+              content[idx].type = '';
+              [, inAbschnitt.menu, inAbschnitt.value] = tR;
+            } else if (tR[0] === 'Ende' && tR.length > 0) {
+              content[idx].type = '';
+              inAbschnitt = { menu: -1, value: -1 };
             }
           }
-          // ABSCHNITSMENÜ
-          if (tR[0] === 'Menü' && tR.length > 0) {
-            content[idx].type = 'menü';
-            const werte = [];
-            tR.forEach((tR2, idx2) => {
-              if (idx2 >= 3) {
-                const neuWert = tR2.split('|');
-                werte.push({ title: neuWert[1], value: neuWert[0] });
-              }
-            });
-            content[idx].werte = werte;
-            [, content[idx].id] = tR;
-            [, , content[idx].html] = tR;
-          }
         }
+        content[idx].inAbschnitt = JSON.parse(JSON.stringify(inAbschnitt));
       });
       return content;
     },
