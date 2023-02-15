@@ -1,0 +1,12 @@
+
+	require_once($goToBaseAPI.'data/php/phpqrcode/qrlib.php');
+	$qrCodeFileName = 'qr_appurl_'.md5($appurl).'.png';
+	$qrCodeAbsoluteFilePath = $goToBaseAPI.'../store/pdf/public/temp/'.$qrCodeFileName;
+	if (!file_exists($qrCodeAbsoluteFilePath)) {
+		QRcode::png($appurl, $qrCodeAbsoluteFilePath);
+		//echo 'File generated!';
+		//echo '<hr />';
+	} else {
+		//echo 'File already generated! We can use this cached file to speed up site on common codes!';
+		//echo '<hr />';
+	} 
