@@ -394,8 +394,11 @@ export default {
       content.forEach((t, idx) => {
         if (idx % 2) {
           const tR = t.html.split('::');
+          let typename = tR[0];
+          typename = typename.split('<br />\n').join('');
+          typename = typename.split('\n<br />').join('');
           if (tR.length > 0) {
-            if (tR[0] === 'Asset' && tR.length > 0) {
+            if (typename === 'Asset' && tR.length > 0) {
               const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR[1], 10));
               if (asset.length > 0) {
                 content[idx].type = asset[0].type;
@@ -424,28 +427,55 @@ export default {
                   content[idx].html = neuHtml;
                 }
               }
-            } else if (tR[0] === 'Menü' && tR.length > 0) {
-              content[idx].type = 'menü';
+            } else if (typename === 'Nummerierung' && tR.length > 0) {
+              content[idx].type = typename.toLowerCase();
+              const werte = [];
+              tR.forEach((tR2, idx2) => {
+                if (idx2 >= 1) {
+                  werte.push(tR2);
+                }
+              });
+              content[idx].werte = werte;
+            } else if (['Tabs', 'Auswahl'].includes(typename) && tR.length > 0) {
+              content[idx].type = typename.toLowerCase();
               const werte = [];
               tR.forEach((tR2, idx2) => {
                 if (idx2 >= 3) {
                   const neuWert = tR2.split('|');
+                  neuWert[1] = neuWert[1].split('<br />').join('');
                   werte.push({ title: neuWert[1], value: neuWert[0] });
                 }
               });
               content[idx].werte = werte;
               [, content[idx].id] = tR;
               [, , content[idx].html] = tR;
-            } else if (tR[0] === 'Beginn' && tR.length > 0) {
+              content[idx].html = content[idx].html.split('<br />').join('');
+            } else if (typename === 'Abschnitt' && tR.length === 3) {
               content[idx].type = '';
               [, inAbschnitt.menu, inAbschnitt.value] = tR;
-            } else if (tR[0] === 'Ende' && tR.length > 0) {
+            } else if (typename === 'Abschnitt' && tR.length === 1) {
               content[idx].type = '';
               inAbschnitt = { menu: -1, value: -1 };
             }
           }
         }
+        content[idx].type = content[idx].type.split('<br />').join('');
+        content[idx].type = content[idx].type.split('\n').join('');
+        content[idx].id = String(content[idx].id);
+        content[idx].id = content[idx].id.split('<br />').join('');
+        content[idx].id = content[idx].id.split('\n').join('');
+        content[idx].id = parseInt(content[idx].id, 10);
+        console.log(content[idx].type);
         content[idx].inAbschnitt = JSON.parse(JSON.stringify(inAbschnitt));
+        if (
+          content[idx].inAbschnitt.menu > 0
+          && (
+            content[idx].html.substring(0, 7) === '\n<br />'
+            || content[idx].html.substring(0, 7) === '<br />\n'
+          )
+        ) {
+          content[idx].html = content[idx].html.substring(7, content[idx].html.length - 1);
+        }
       });
       return content;
     },

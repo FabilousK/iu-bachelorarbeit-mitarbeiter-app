@@ -5,6 +5,7 @@
           o.type !== ''
           && o.html.split('\n<br />').join('') !== ''
           && o.html.split('<br />\n').join('') !== ''
+          && o.html.split('>').join('') !== ''
           && (
             o.inAbschnitt.menu < 0
             || menueAuswahlWerte[o.inAbschnitt.menu] === o.inAbschnitt.value
@@ -23,15 +24,38 @@
         class="px-2"
         align="justify"
       ></div>
-      <!-- ABSCHNITTSMENÜ -->
+      <!-- Nummerierte Liste -->
+      <v-list
+        v-if="cont.type === 'nummerierung'"
+        style="background:transparent;"
+      >
+        <v-list-item
+          v-for="(wert, idx) in cont.werte"
+          :key="idx"
+        >
+          <v-list-item-title></v-list-item-title>
+          <v-row>
+            <v-col cols="1" align="center">
+              <v-avatar color="primary" density="compact" size="small">
+                {{ idx + 1 }}
+              </v-avatar>
+            </v-col>
+            <v-col>
+              <div v-html="wert"></div>
+            </v-col>
+          </v-row>
+        </v-list-item>
+      </v-list>
+      <!-- ABSCHNITTSMENÜ TABS -->
       <div
-        v-if="cont.type === 'menü'"
-        class="px-2 mb-4"
+        v-if="cont.type === 'tabs'"
+        class="px-2 mt-4 mb-4"
         align="justify"
       >
         <p class="pa-4"><b>{{ cont.html }}</b></p>
         <v-tabs
           density="compact" center-active
+          :mandatory="false"
           v-model="menueAuswahlWerte[cont.id]"
         >
           <v-tab
@@ -42,6 +66,20 @@
             {{ wert.title }}
           </v-tab>
         </v-tabs>
+      </div>
+      <!-- ABSCHNITTSAUSWAHL -->
+      <div
+        v-if="cont.type === 'auswahl'"
+        class="px-2 mt-4"
+        align="justify"
+      >
+        <v-select
+          :label="cont.html"
+          v-model="menueAuswahlWerte[cont.id]"
+          :items="cont.werte"
+          item-title="title"
+          item-value="value"
+        />
       </div>
       <!-- IMG -->
       <v-img
