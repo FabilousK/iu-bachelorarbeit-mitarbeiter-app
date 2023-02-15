@@ -24,6 +24,35 @@
         class="px-2"
         align="justify"
       ></div>
+      <!-- Bildergalerie -->
+      <v-carousel
+        cycle
+        v-if="cont.type === 'bilder'"
+        show-arrows="hover"
+      >
+        <v-carousel-item
+          v-for="(wert, idx) in cont.werte" :key="idx"
+          :src="wert"
+          cover
+        ></v-carousel-item>
+      </v-carousel>
+      <!-- Akkordeon -->
+      <v-expansion-panels
+        v-if="cont.type === 'akkordeon'"
+        style="background:transparent;"
+        class="my-2"
+      >
+        <v-expansion-panel
+          v-for="(wert, idx) in cont.werte"
+          :key="idx"
+        >
+          <v-expansion-panel-title>{{ wert.title }}</v-expansion-panel-title>
+          <v-expansion-panel-text
+            v-html="wert.text"
+            class="pa-2"
+          />
+        </v-expansion-panel>
+      </v-expansion-panels>
       <!-- Nummerierte Liste -->
       <v-list
         v-if="cont.type === 'nummerierung'"

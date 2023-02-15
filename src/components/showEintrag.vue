@@ -156,7 +156,7 @@
                     :key="asset.id"
                     class="ma-1 pa-5"
                   >
-                    {{ asset.name }}.{{ asset.type }}
+                  [{{ asset.id }}]-{{ asset.name }}.{{ asset.type }}
                     <v-btn
                       size="x-small" icon="mdi-content-copy" class="ms-4"
                       @click="copyToClipboard(`[[Asset::${asset.id}]]`);"
@@ -398,7 +398,28 @@ export default {
           typename = typename.split('<br />\n').join('');
           typename = typename.split('\n<br />').join('');
           if (tR.length > 0) {
-            if (typename === 'Asset' && tR.length > 0) {
+            if (typename === 'Bilder') {
+              if (tR.length === 2) {
+                // Wenn die Galerie nur ein Bild hat, mache ein Bild daraus
+                typename = 'Asset';
+              } else {
+                content[idx].type = typename.toLowerCase();
+                const werte = [];
+                tR.forEach((tR2, idx2) => {
+                  if (idx2 >= 1) {
+                    const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR2, 10));
+                    if (asset.length > 0) {
+                      let neuHtml = '';
+                      neuHtml = `${this.$store.state.main.urlApi}api/data/`;
+                      neuHtml += `assets/${this.eintrag.id}/${asset[0].id}.${asset[0].type}`;
+                      werte.push(neuHtml);
+                    }
+                  }
+                });
+                content[idx].werte = werte;
+              }
+            }
+            if (typename === 'Asset' && tR.length === 2) {
               const asset = this.eintrag.assets.filter((o) => o.id === parseInt(tR[1], 10));
               if (asset.length > 0) {
                 content[idx].type = asset[0].type;
@@ -427,6 +448,16 @@ export default {
                   content[idx].html = neuHtml;
                 }
               }
+            } else if (typename === 'Akkordeon' && tR.length > 1) {
+              content[idx].type = typename.toLowerCase();
+              const werte = [];
+              tR.forEach((tR2, idx2) => {
+                if (idx2 >= 1) {
+                  const neuVal = tR2.split('|');
+                  werte.push({ title: neuVal[0], text: neuVal[1] });
+                }
+              });
+              content[idx].werte = werte;
             } else if (typename === 'Nummerierung' && tR.length > 0) {
               content[idx].type = typename.toLowerCase();
               const werte = [];
@@ -465,7 +496,6 @@ export default {
         content[idx].id = content[idx].id.split('<br />').join('');
         content[idx].id = content[idx].id.split('\n').join('');
         content[idx].id = parseInt(content[idx].id, 10);
-        console.log(content[idx].type);
         content[idx].inAbschnitt = JSON.parse(JSON.stringify(inAbschnitt));
         if (
           content[idx].inAbschnitt.menu > 0
